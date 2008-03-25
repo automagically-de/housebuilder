@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=HouseBuilder
+GenericName=HouseBuilder
+Icon=@prefix@/share/g3dviewer/icons/housebuilder48.png
+Comment=Virtual house builder
+Comment[de_DE]=Virtueller Häuserbauer
+Exec=@prefix@/bin/housebuilder
+Terminal=false
+StartupNotify=false
+Type=Application
+TryExec=@prefix@/bin/housebuilder
+Categories=GTK;3DGraphics;Application;Graphics;
