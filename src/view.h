@@ -3,9 +3,12 @@
 
 #include <gtk/gtk.h>
 
+#include "gui.h"
+
 typedef struct {
 	GtkWidget *widget;
 	gpointer user_data;
+	HBGui *gui;
 } HBView;
 
 #endif /* _VIEW_H */

@@ -1,11 +1,18 @@
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
 
+#include "house.h"
+#include "node.h"
 #include "view2d.h"
+
+#include "part_wall.h"
 
 typedef struct {
 	gfloat scale;
 	GtkWidget *da;
+	HBPart *preview;
+	gint32 drag_x;
+	gint32 drag_y;
 } View2DPrivate;
 
 static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
@@ -28,6 +35,7 @@ HBView *view2d_new(void)
 	view = g_new0(HBView, 1);
 	priv = g_new0(View2DPrivate, 1);
 	priv->scale = 1.0;
+	priv->drag_x = priv->drag_y = -1;
 	view->user_data = priv;
 
 	/* table */
@@ -99,6 +107,10 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	cairo_rectangle(cairo, 0.0, 0.0, 100, 100);
 	cairo_fill(cairo);
 
+	/* preview */
+	if(priv->preview && priv->preview->type->render2d)
+		priv->preview->type->render2d(priv->preview, cairo, LAYER_PREVIEW);
+
 	cairo_destroy(cairo);
 
 	return TRUE;
@@ -107,12 +119,36 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 static gboolean button_press_cb(GtkWidget *widget, GdkEventButton *event,
 	gpointer data)
 {
+	HBView *view = (HBView *)data;
+	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+
+	priv->drag_x = event->x;
+	priv->drag_y = event->y;
+
+	/* FIXME: tool selection */
+	if(1) {
+		priv->preview = part_wall_new();
+		/* FIXME: offset + scale */
+		node_set_xy(priv->preview, 0, event->x, event->y);
+		view2d_redraw(view);
+	}
 	return TRUE;
 }
 
 static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 	gpointer data)
 {
+	HBView *view = (HBView *)data;
+	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+
+	if(priv->preview) {
+		part_free(priv->preview);
+		priv->preview = NULL;
+		view2d_redraw(view);
+	}
+
+	priv->drag_x = -1;
+	priv->drag_y = -1;
 	return TRUE;
 }
 
@@ -143,6 +179,17 @@ static gboolean scroll_cb(GtkWidget *widget, GdkEventScroll *event,
 static gboolean motion_notify_cb(GtkWidget *widget, GdkEventMotion *event,
 	gpointer data)
 {
+	HBView *view = (HBView *)data;
+	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+
+	if(priv->drag_x >= 0) {
+		if(priv->preview) {
+			/* FIXME: offset + scale */
+			node_set_xy(priv->preview, 1, event->x, event->y);
+			view2d_redraw(view);
+		}
+	}
+
 	return TRUE;
 }
 

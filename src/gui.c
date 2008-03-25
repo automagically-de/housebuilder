@@ -5,11 +5,13 @@
 #include <gtk/gtk.h>
 
 #include "gui.h"
+#include "house.h"
 #include "view2d.h"
 #include "view3d.h"
 
 struct _HBGui {
 	GtkWidget *window;
+	HBHouse *house;
 
 	HBView *view2d;
 	HBView *view3d;
@@ -42,6 +44,7 @@ HBGui *gui_init(int *argcp, char ***argvp)
 	/* add views */
 	gui->view2d = view2d_new();
 	gui->view3d = view3d_new();
+	gui->view2d->gui = gui->view3d->gui = gui;
 
 	label = gtk_label_new_with_mnemonic("_2D view");
 	gtk_notebook_append_page(GTK_NOTEBOOK(nb), gui->view2d->widget, label);

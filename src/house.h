@@ -35,6 +35,7 @@ struct _HBPart {
 };
 
 HBPart *part_new(HBPartType *type, gpointer data);
+void part_free(HBPart *part);
 
 typedef struct {
 	gboolean dirty;

@@ -10,3 +10,12 @@ HBPart *part_new(HBPartType *type, gpointer data)
 
 	return part;
 }
+
+void part_free(HBPart *part)
+{
+	/* FIXME: delete properties & nodes */
+	if(part->data)
+		g_free(part->data);
+
+	g_free(part);
+}
