@@ -62,3 +62,10 @@ gboolean gui_run(HBGui *gui)
 
 	return TRUE;
 }
+
+HBHouse *gui_get_house(HBGui *gui)
+{
+	if(gui->house == NULL)
+		gui->house = g_new0(HBHouse, 1);
+	return gui->house;
+}

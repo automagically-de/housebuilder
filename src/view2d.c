@@ -96,7 +96,9 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	gpointer data)
 {
 	HBView *view = (HBView *)data;
+	HBPart *part;
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+	GSList *item;
 	cairo_t *cairo;
 
 	cairo = gdk_cairo_create(GTK_LAYOUT(widget)->bin_window);
@@ -106,6 +108,17 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 1.0); /* white */
 	cairo_rectangle(cairo, 0.0, 0.0, 100, 100);
 	cairo_fill(cairo);
+
+	/* parts */
+	for(item = gui_get_house(view->gui)->parts; item; item = item->next) {
+		part = (HBPart *)item->data;
+
+		if(part->type->render2d) {
+			cairo_save(cairo);
+			part->type->render2d(part, cairo, LAYER_BASE);
+			cairo_restore(cairo);
+		}
+	}
 
 	/* preview */
 	if(priv->preview && priv->preview->type->render2d)
@@ -122,14 +135,13 @@ static gboolean button_press_cb(GtkWidget *widget, GdkEventButton *event,
 	HBView *view = (HBView *)data;
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
 
-	priv->drag_x = event->x;
-	priv->drag_y = event->y;
+	priv->drag_x = (event->x / priv->scale);
+	priv->drag_y = (event->y / priv->scale);
 
 	/* FIXME: tool selection */
 	if(1) {
 		priv->preview = part_wall_new();
-		/* FIXME: offset + scale */
-		node_set_xy(priv->preview, 0, event->x, event->y);
+		node_set_xy(priv->preview, 0, priv->drag_x, priv->drag_y);
 		view2d_redraw(view);
 	}
 	return TRUE;
@@ -139,7 +151,21 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 	gpointer data)
 {
 	HBView *view = (HBView *)data;
+	HBHouse *house;
+	HBPart *part;
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+
+	house = gui_get_house(view->gui);
+
+	/* FIXME: tool selection */
+	if(1) {
+		part = part_wall_new();
+		node_set_xy(part, 0, priv->drag_x, priv->drag_y);
+		node_set_xy(part, 1,
+			(event->x / priv->scale),
+			(event->y / priv->scale));
+		house->parts = g_slist_append(house->parts, part);
+	}
 
 	if(priv->preview) {
 		part_free(priv->preview);
@@ -184,8 +210,9 @@ static gboolean motion_notify_cb(GtkWidget *widget, GdkEventMotion *event,
 
 	if(priv->drag_x >= 0) {
 		if(priv->preview) {
-			/* FIXME: offset + scale */
-			node_set_xy(priv->preview, 1, event->x, event->y);
+			node_set_xy(priv->preview, 1,
+				(event->x / priv->scale),
+				(event->y / priv->scale));
 			view2d_redraw(view);
 		}
 	}

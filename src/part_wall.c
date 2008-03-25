@@ -50,7 +50,14 @@ gboolean part_wall_render2d(HBPart *part, cairo_t *cairo, LayerID layerid)
 
 	switch(layerid) {
 		case LAYER_BASE:
-
+			cairo_set_line_width(cairo, 1.0);
+			cairo_rectangle(cairo,
+				- delta / 2.0, - wall->thickness / 2.0,
+				delta, wall->thickness);
+			cairo_set_source_rgba(cairo, 1.0, 0.8, 0.8, 1.0);
+			cairo_fill_preserve(cairo);
+			cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 1.0);
+			cairo_stroke(cairo);
 			break;
 		case LAYER_PREVIEW:
 			cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 0.7);
