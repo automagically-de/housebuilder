@@ -5,7 +5,13 @@ housebuilder_SOURCES = \
 	gui.c gui.h \
 	view.h \
 	view2d.c view2d.h \
-	view3d.c view3d.h
+	view3d.c view3d.h \
+	house.c house.h \
+	node.c node.h \
+	part_wall.c part_wall.h \
+	layers.h \
+	property.c property.h \
+	misc.c misc.h
 
 housebuilder_CFLAGS = \
 	-I$(top_srcdir) -I$(top_builddir) \
