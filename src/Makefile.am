@@ -1,7 +1,11 @@
 bin_PROGRAMS = housebuilder
 
 housebuilder_SOURCES = \
-	main.c main.h
+	main.c main.h \
+	gui.c gui.h \
+	view.h \
+	view2d.c view2d.h \
+	view3d.c view3d.h
 
 housebuilder_CFLAGS = \
 	-I$(top_srcdir) -I$(top_builddir) \
