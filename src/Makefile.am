@@ -5,6 +5,8 @@ housebuilder_SOURCES = \
 	gui.c gui.h \
 	view.h \
 	view2d.c view2d.h \
+	actions.c actions.h \
+	tools.h \
 	view3d.c view3d.h \
 	gl.c gl.h \
 	trackball.c trackball.h \

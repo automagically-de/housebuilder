@@ -131,7 +131,7 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	cairo_paint(cairo);
 
 	/* grid */
-	cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 0.7);
+	cairo_set_source_rgba(cairo, 0.3, 0.3, 0.3, 1.0);
 
 	for(y = 0; y <= priv->da->allocation.height / priv->scale; y += 10) {
 		if((y % 100) == 0)
@@ -270,5 +270,17 @@ static gboolean motion_notify_cb(GtkWidget *widget, GdkEventMotion *event,
 	rulers_update(view);
 
 	return TRUE;
+}
+
+/* callbacks for menu/toolbar actions ****************************************/
+
+void view2d_upper_floor_cb(GtkWidget *widget, HBView *view)
+{
+	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+}
+
+void view2d_lower_floor_cb(GtkWidget *widget, HBView *view)
+{
+	View2DPrivate *priv = (View2DPrivate *)view->user_data;
 }
 

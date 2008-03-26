@@ -1,0 +1,17 @@
+<ui>
+	<menubar name="MainMenu">
+		<menu action="FileMenuAction">
+			<menuitem action="QuitAction" />
+		</menu>
+	</menubar>
+	<toolbar name="View2DToolbar">
+		<toolitem action="UpperFloorAction" />
+		<toolitem action="LowerFloorAction" />
+	</toolbar>
+	<toolbar name="ToolsToolbar">
+		<toolitem action="ToolSelectAction" />
+		<toolitem action="ToolDeleteAction" />
+		<separator />
+		<toolitem action="ToolAddWallAction" />
+	</toolbar>
+</ui>
