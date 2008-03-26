@@ -188,6 +188,7 @@ static gboolean button_press_cb(GtkWidget *widget, GdkEventButton *event,
 	if(priv->selected_tool == TOOL_ADD_WALL) {
 		priv->preview = part_wall_new();
 		node_set_xy(priv->preview, 0, priv->drag_x, priv->drag_y);
+		node_set_xy(priv->preview, 1, priv->drag_x, priv->drag_y);
 		view2d_redraw(view);
 	}
 	return TRUE;
