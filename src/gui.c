@@ -3,6 +3,7 @@
 #endif
 
 #include <gtk/gtk.h>
+#include <g3d/g3d.h>
 
 #include "gui.h"
 #include "house.h"
@@ -15,6 +16,8 @@ struct _HBGui {
 
 	HBView *view2d;
 	HBView *view3d;
+
+	G3DContext *context;
 };
 
 HBGui *gui_init(int *argcp, char ***argvp)
@@ -41,6 +44,9 @@ HBGui *gui_init(int *argcp, char ***argvp)
 	nb = gtk_notebook_new();
 	gtk_box_pack_start(GTK_BOX(vbox), nb, TRUE, TRUE, 0);
 
+	/* g3d initialization */
+	gui->context = g3d_context_new();
+
 	/* add views */
 	gui->view2d = view2d_new();
 	gui->view3d = view3d_new();
@@ -65,7 +71,13 @@ gboolean gui_run(HBGui *gui)
 
 HBHouse *gui_get_house(HBGui *gui)
 {
-	if(gui->house == NULL)
+	if(gui->house == NULL) {
 		gui->house = g_new0(HBHouse, 1);
+		gui->house->dlist = -1;
+
+		gui->house->model = g_new0(G3DModel, 1);
+		gui->house->model->filename = g_strdup("house");
+		gui->house->model->context = gui->context;
+	}
 	return gui->house;
 }

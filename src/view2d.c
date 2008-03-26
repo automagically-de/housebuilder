@@ -165,6 +165,12 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 			(event->x / priv->scale),
 			(event->y / priv->scale));
 		house->parts = g_slist_append(house->parts, part);
+
+		if(part->type->render3d) {
+			part->type->render3d(part, house->model);
+			house_update_position_hints(house);
+			house->dirty = TRUE; /* rebuild GL list */
+		}
 	}
 
 	if(priv->preview) {

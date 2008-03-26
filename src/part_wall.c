@@ -1,3 +1,7 @@
+#include <g3d/g3d.h>
+#include <g3d/primitive.h>
+#include <g3d/matrix.h>
+
 #include "house.h"
 #include "node.h"
 #include "property.h"
@@ -75,5 +79,33 @@ gboolean part_wall_render2d(HBPart *part, cairo_t *cairo, LayerID layerid)
 
 gboolean part_wall_render3d(HBPart *part, G3DModel *model)
 {
+	static G3DMaterial *mat = NULL;
+	PartWall *wall = (PartWall *)part->data;
+	gdouble cx, cy, angle, delta;
+	gfloat matrix[16];
+
+	node_get_center(part, &cx, &cy);
+	angle = node_get_angle(part);
+	delta = node_get_delta(part);
+
+	if(mat == NULL) {
+		/* FIXME */
+		mat = g3d_material_new();
+	}
+
+	/* remove old object */
+	if(part->object) {
+		model->objects = g_slist_remove(model->objects, part->object);
+		g3d_object_free(part->object);
+	}
+
+	g3d_matrix_identity(matrix);
+	g3d_matrix_rotate(-angle, 0.0, 1.0, 0.0, matrix);
+	g3d_matrix_translate(cx, 10.0, cy, matrix);
+	part->object = g3d_primitive_cube(delta, 20.0, wall->thickness, mat);
+	g3d_object_transform(part->object, matrix);
+
+	model->objects = g_slist_append(model->objects, part->object);
+
 	return TRUE;
 }

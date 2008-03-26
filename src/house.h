@@ -41,6 +41,13 @@ typedef struct {
 	gboolean dirty;
 	GSList *parts;
 	G3DModel *model;
+	gint32 dlist;
+	gdouble off_x;
+	gdouble off_y;
+	gdouble off_z;
+	gdouble scale;
 } HBHouse;
+
+gboolean house_update_position_hints(HBHouse *house);
 
 #endif /* _HOUSE_H */

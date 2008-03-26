@@ -6,6 +6,8 @@ housebuilder_SOURCES = \
 	view.h \
 	view2d.c view2d.h \
 	view3d.c view3d.h \
+	gl.c gl.h \
+	trackball.c trackball.h \
 	house.c house.h \
 	node.c node.h \
 	part_wall.c part_wall.h \
