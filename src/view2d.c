@@ -13,6 +13,8 @@ typedef struct {
 	HBPart *preview;
 	gint32 drag_x;
 	gint32 drag_y;
+	GtkWidget *ruler_h;
+	GtkWidget *ruler_v;
 } View2DPrivate;
 
 static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
@@ -28,7 +30,7 @@ static gboolean motion_notify_cb(GtkWidget *widget, GdkEventMotion *event,
 
 HBView *view2d_new(void)
 {
-	GtkWidget *table, *sw, *ruler;
+	GtkWidget *table, *sw;
 	HBView *view;
 	View2DPrivate *priv;
 
@@ -67,14 +69,14 @@ HBView *view2d_new(void)
 		G_CALLBACK(motion_notify_cb), view);
 
 	/* rulers */
-	ruler = gtk_hruler_new();
-	gtk_ruler_set_range(GTK_RULER(ruler), 0, 800, 0, 800);
-	gtk_table_attach(GTK_TABLE(table), ruler, 1, 2, 0, 1,
+	priv->ruler_h = gtk_hruler_new();
+	gtk_ruler_set_range(GTK_RULER(priv->ruler_h), 0, 800, 0, 800);
+	gtk_table_attach(GTK_TABLE(table), priv->ruler_h, 1, 2, 0, 1,
 		GTK_EXPAND|GTK_SHRINK|GTK_FILL, GTK_FILL, 0, 0);
 
-	ruler = gtk_vruler_new();
-	gtk_ruler_set_range(GTK_RULER(ruler), 0, 600, 0, 600);
-	gtk_table_attach(GTK_TABLE(table), ruler, 0, 1, 1, 2,
+	priv->ruler_v = gtk_vruler_new();
+	gtk_ruler_set_range(GTK_RULER(priv->ruler_v), 0, 600, 0, 600);
+	gtk_table_attach(GTK_TABLE(table), priv->ruler_v, 0, 1, 1, 2,
 		GTK_FILL, GTK_EXPAND|GTK_SHRINK|GTK_FILL, 0, 0);
 
 	view->widget = table;
@@ -90,6 +92,25 @@ void view2d_redraw(HBView *view)
 		priv->da->allocation.width, priv->da->allocation.height);
 }
 
+/* helper functions **********************************************************/
+
+static void rulers_update(HBView *view)
+{
+	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+	gint32 x, y;
+	GdkModifierType state;
+
+	gdk_window_get_pointer(priv->da->window, &x, &y, &state);
+
+	gtk_ruler_set_range(GTK_RULER(priv->ruler_h),
+		0, priv->da->allocation.width / priv->scale, x / priv->scale,
+		priv->da->allocation.width / priv->scale);
+
+	gtk_ruler_set_range(GTK_RULER(priv->ruler_v),
+		0, priv->da->allocation.height / priv->scale, y / priv->scale,
+		priv->da->allocation.height / priv->scale);
+}
+
 /* drawing area callbacks ****************************************************/
 
 static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
@@ -100,14 +121,36 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
 	GSList *item;
 	cairo_t *cairo;
+	gint32 x, y;
 
 	cairo = gdk_cairo_create(GTK_LAYOUT(widget)->bin_window);
 	cairo_scale(cairo, priv->scale, priv->scale);
 
 	/* background */
 	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 1.0); /* white */
-	cairo_rectangle(cairo, 0.0, 0.0, 100, 100);
-	cairo_fill(cairo);
+	cairo_paint(cairo);
+
+	/* grid */
+	cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 0.7);
+
+	for(y = 0; y <= priv->da->allocation.height / priv->scale; y += 10) {
+		if((y % 100) == 0)
+			cairo_set_line_width(cairo, 1.0);
+		else
+			cairo_set_line_width(cairo, 0.4);
+		cairo_move_to(cairo, 0, y);
+		cairo_line_to(cairo, priv->da->allocation.width / priv->scale, y);
+		cairo_stroke(cairo);
+	}
+	for(x = 0; x <= priv->da->allocation.width / priv->scale; x += 10) {
+		if((x % 100) == 0)
+			cairo_set_line_width(cairo, 1.0);
+		else
+			cairo_set_line_width(cairo, 0.4);
+		cairo_move_to(cairo, x, 0);
+		cairo_line_to(cairo, x, priv->da->allocation.height / priv->scale);
+		cairo_stroke(cairo);
+	}
 
 	/* parts */
 	for(item = gui_get_house(view->gui)->parts; item; item = item->next) {
@@ -203,6 +246,7 @@ static gboolean scroll_cb(GtkWidget *widget, GdkEventScroll *event,
 			break;
 	}
 
+	rulers_update(view);
 	view2d_redraw(view);
 
 	return TRUE;
@@ -222,6 +266,8 @@ static gboolean motion_notify_cb(GtkWidget *widget, GdkEventMotion *event,
 			view2d_redraw(view);
 		}
 	}
+
+	rulers_update(view);
 
 	return TRUE;
 }
