@@ -38,9 +38,9 @@ GdkGLConfig *gl_get_config(void)
 void gl_init(void)
 {
 	GLenum error;
-	GLfloat light0_pos[4] = { -50.0, 50.0, 0.0, 0.0 };
+	GLfloat light0_pos[4] = { -500.0, 500.0, 0.0, 0.0 };
 	GLfloat light0_col[4] = { 0.6, 0.6, 0.6, 1.0 };
-	GLfloat light1_pos[4] = {  50.0, 50.0, 0.0, 0.0 };
+	GLfloat light1_pos[4] = {  500.0, 500.0, 0.0, 0.0 };
 	GLfloat light1_col[4] = { 0.4, 0.4, 0.4, 1.0 };
 	GLfloat ambient_lc[4] = { 0.35, 0.35, 0.35, 1.0 };
 
@@ -86,8 +86,10 @@ gboolean gl_update_material(G3DMaterial *material)
 	g_debug("material updated");
 
 	glColor4f(material->r, material->g, material->b, material->a);
+#if 1
 	glMaterialfv(GL_FRONT, GL_SPECULAR, material->specular);
 	glMaterialf(GL_FRONT, GL_SHININESS, material->shininess * 10);
+#endif
 	return TRUE;
 }
 
@@ -98,12 +100,43 @@ gboolean gl_draw_object(G3DObject *object)
 	gboolean req_end = FALSE;
 	gint32 prev_vcnt = -1;
 	gint32 i, index;
+#if DEBUG > 1
+	gint32 cx, cy, cz;
+#endif
 	G3DMaterial *prev_mat = NULL;
 
 	g_debug("gl_draw_object called");
 
 	for(iface = object->faces; iface != NULL; iface = iface->next) {
 		face = (G3DFace *)iface->data;
+
+#if DEBUG > 1
+		/* show normal vectors */
+		if(req_end) {
+			glEnd();
+			req_end = FALSE;
+		}
+		glColor4f(1.0, 0.0, 1.0, 1.0);
+		glBegin(GL_LINES);
+		cx = cy = cz = 0;
+		for(i = 0; i < face->vertex_count; i ++) {
+			index = face->vertex_indices[i];
+			cx += object->vertex_data[index * 3 + 0];
+			cy += object->vertex_data[index * 3 + 1];
+			cz += object->vertex_data[index * 3 + 2];
+		}
+		cx /= (gfloat)face->vertex_count;
+		cy /= (gfloat)face->vertex_count;
+		cz /= (gfloat)face->vertex_count;
+		glVertex3f(cx, cy, cz);
+		glVertex3f(
+			cx - face->normals[0] * 10.0,
+			cy - face->normals[1] * 10.0,
+			cz - face->normals[2] * 10.0);
+		glEnd();
+		prev_mat = NULL;
+		prev_vcnt = -1;
+#endif
 
 		/* update material */
 		if(face->material != prev_mat) {

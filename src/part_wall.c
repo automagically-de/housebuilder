@@ -91,6 +91,10 @@ gboolean part_wall_render3d(HBPart *part, G3DModel *model)
 	if(mat == NULL) {
 		/* FIXME */
 		mat = g3d_material_new();
+		mat->r = 0.8;
+		mat->g = 0.2;
+		mat->b = 0.0;
+		mat->a = 1.0;
 	}
 
 	/* remove old object */
@@ -99,11 +103,12 @@ gboolean part_wall_render3d(HBPart *part, G3DModel *model)
 		g3d_object_free(part->object);
 	}
 
-	part->object = g3d_primitive_cube(delta, 20.0, wall->thickness, mat);
+	part->object = g3d_primitive_box(delta, 20.0, wall->thickness, mat);
 
 	g3d_matrix_identity(matrix);
 	g3d_matrix_rotate(-angle, 0.0, 1.0, 0.0, matrix);
 	g3d_object_transform(part->object, matrix);
+	g3d_object_transform_normals(part->object, matrix);
 
 	g3d_matrix_identity(matrix);
 	g3d_matrix_translate(cx, 10.0, cy, matrix);
