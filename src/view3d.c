@@ -202,7 +202,7 @@ gboolean view3d_motion_cb(GtkWidget *widget, GdkEventMotion *event,
 		if(state & GDK_SHIFT_MASK) {
 			/* shift pressed, translate view */
 			house->off_x += (gdouble)(x - priv->drag_x) / 10.0;
-			house->off_y += (gdouble)(y - priv->drag_y) / 10.0;
+			house->off_z += (gdouble)(y - priv->drag_y) / 10.0;
 		} else {
 			/* rotate view */
 			gfloat spin_quat[4];
