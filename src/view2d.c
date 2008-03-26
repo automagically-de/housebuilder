@@ -4,6 +4,7 @@
 #include "house.h"
 #include "node.h"
 #include "view2d.h"
+#include "tools.h"
 
 #include "part_wall.h"
 
@@ -15,6 +16,7 @@ typedef struct {
 	gint32 drag_y;
 	GtkWidget *ruler_h;
 	GtkWidget *ruler_v;
+	HBToolID selected_tool;
 } View2DPrivate;
 
 static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
@@ -38,6 +40,7 @@ HBView *view2d_new(void)
 	priv = g_new0(View2DPrivate, 1);
 	priv->scale = 1.0;
 	priv->drag_x = priv->drag_y = -1;
+	priv->selected_tool = TOOL_SELECT;
 	view->user_data = priv;
 
 	/* table */
@@ -182,7 +185,7 @@ static gboolean button_press_cb(GtkWidget *widget, GdkEventButton *event,
 	priv->drag_y = (event->y / priv->scale);
 
 	/* FIXME: tool selection */
-	if(1) {
+	if(priv->selected_tool == TOOL_ADD_WALL) {
 		priv->preview = part_wall_new();
 		node_set_xy(priv->preview, 0, priv->drag_x, priv->drag_y);
 		view2d_redraw(view);
@@ -201,7 +204,7 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 	house = gui_get_house(view->gui);
 
 	/* FIXME: tool selection */
-	if(1) {
+	if(priv->selected_tool == TOOL_ADD_WALL) {
 		part = part_wall_new();
 		node_set_xy(part, 0, priv->drag_x, priv->drag_y);
 		node_set_xy(part, 1,
@@ -282,5 +285,13 @@ void view2d_upper_floor_cb(GtkWidget *widget, HBView *view)
 void view2d_lower_floor_cb(GtkWidget *widget, HBView *view)
 {
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+}
+
+void view2d_select_tool_cb(GtkAction *action, GtkRadioAction *current,
+	HBView *view)
+{
+	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+
+	priv->selected_tool = gtk_radio_action_get_current_value(current);
 }
 

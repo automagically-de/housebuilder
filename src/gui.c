@@ -64,7 +64,7 @@ HBGui *gui_init(int *argcp, char ***argvp)
 		action_view2d_num_entries, gui->view2d);
 	gtk_action_group_add_radio_actions(ag,
 		action_radio_entries, action_num_radio_entries,
-		-1, G_CALLBACK(actions_radio_cb), gui);
+		-1, G_CALLBACK(view2d_select_tool_cb), gui->view2d);
 	gtk_ui_manager_insert_action_group(ui, ag, 0);
 	gtk_ui_manager_add_ui_from_file(ui,
 		DATA_DIR "/ui.xml", &error);
@@ -92,7 +92,7 @@ HBGui *gui_init(int *argcp, char ***argvp)
 	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 
 	hbox = gtk_hbox_new(FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 5);
 
 	toolbar = gtk_ui_manager_get_widget(ui, "/ToolsToolbar");
 	gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),

@@ -10,5 +10,7 @@ void view2d_redraw(HBView *view);
 /* callbacks */
 void view2d_upper_floor_cb(GtkWidget *widget, HBView *view);
 void view2d_lower_floor_cb(GtkWidget *widget, HBView *view);
+void view2d_select_tool_cb(GtkAction *action, GtkRadioAction *current,
+	HBView *view);
 
 #endif /* _VIEW2D_H */
