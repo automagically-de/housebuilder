@@ -98,7 +98,7 @@ gboolean gl_draw_object(G3DObject *object)
 	gboolean req_end = FALSE;
 	gint32 prev_vcnt = -1;
 	gint32 i, index;
-	static G3DMaterial *prev_mat = NULL;
+	G3DMaterial *prev_mat = NULL;
 
 	g_debug("gl_draw_object called");
 
@@ -218,6 +218,21 @@ gboolean gl_draw(HBHouse *house, gdouble zoom, gdouble aspect, gfloat *quat,
 			glVertex3f( 100.0, 0.0, y);
 		}
 		glEnd();
+		glColor4f(1.0, 0.2, 0.2, 1.0);
+		glBegin(GL_LINES);
+		glVertex3f(0, 0, 0);
+		glVertex3f(100.0, 0, 0);
+		glEnd();
+		glColor4f(0.2, 1.0, 0.2, 1.0);
+		glBegin(GL_LINES);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 100.0, 0);
+		glEnd();
+		glColor4f(0.2, 0.2, 1.0, 1.0);
+		glBegin(GL_LINES);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 0, 100.0);
+		glEnd();
 		glEndList();
 	}
 
@@ -237,7 +252,7 @@ gboolean gl_draw(HBHouse *house, gdouble zoom, gdouble aspect, gfloat *quat,
 		GL_ACCUM_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glLoadIdentity();
-	glTranslatef(0, 0, -100);
+	glTranslatef(0, 0, -300);
 	build_rotmatrix(m, quat);
 	glMultMatrixf(&m[0][0]);
 
@@ -253,11 +268,11 @@ gboolean gl_draw(HBHouse *house, gdouble zoom, gdouble aspect, gfloat *quat,
 		house->dirty = FALSE;
 	}
 
-	glTranslated(-house->off_x, -house->off_y, -house->off_z);
-	glScaled(house->scale, house->scale, house->scale);
-
 	glCallList(dlist_gnd);
+
+	glTranslated(-house->off_x, 0.0, -house->off_z);
 	glCallList(house->dlist);
+
 	TRAP_GL_ERROR("glCallList");
 
 	return TRUE;

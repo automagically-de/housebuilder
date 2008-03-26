@@ -99,10 +99,14 @@ gboolean part_wall_render3d(HBPart *part, G3DModel *model)
 		g3d_object_free(part->object);
 	}
 
+	part->object = g3d_primitive_cube(delta, 20.0, wall->thickness, mat);
+
 	g3d_matrix_identity(matrix);
 	g3d_matrix_rotate(-angle, 0.0, 1.0, 0.0, matrix);
+	g3d_object_transform(part->object, matrix);
+
+	g3d_matrix_identity(matrix);
 	g3d_matrix_translate(cx, 10.0, cy, matrix);
-	part->object = g3d_primitive_cube(delta, 20.0, wall->thickness, mat);
 	g3d_object_transform(part->object, matrix);
 
 	model->objects = g_slist_append(model->objects, part->object);
