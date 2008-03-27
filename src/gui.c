@@ -132,3 +132,8 @@ HBHouse *gui_get_house(HBGui *gui)
 	}
 	return gui->house;
 }
+
+G3DContext *gui_get_g3d_context(HBGui *gui)
+{
+	return gui->context;
+}

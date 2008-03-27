@@ -9,6 +9,7 @@
 
 #include "house.h"
 #include "gl.h"
+#include "texture.h"
 #include "trackball.h"
 
 #define TRAP_GL_ERROR(text) \
@@ -98,12 +99,25 @@ gboolean gl_draw_object(G3DObject *object)
 	G3DFace *face;
 	GSList *iface;
 	gboolean req_end = FALSE;
-	gint32 prev_vcnt = -1;
+	gint32 prev_vcnt = -1, prev_texid = -1;
 	gint32 i, index;
 #if DEBUG > 1
 	gint32 cx, cy, cz;
 #endif
 	G3DMaterial *prev_mat = NULL;
+
+	do {
+		static gboolean tex_loaded = FALSE;
+		GSList *mitem = object->materials;
+		G3DMaterial *mat;
+		if(!tex_loaded && mitem) {
+			mat = (G3DMaterial *)mitem->data;
+			if(mat->tex_image) {
+				texture_load(mat->tex_image);
+				tex_loaded = TRUE;
+			}
+		}
+	} while(0);
 
 #if DEBUG > 1
 	g_debug("gl_draw_object called");
@@ -150,6 +164,19 @@ gboolean gl_draw_object(G3DObject *object)
 			prev_mat = face->material;
 		}
 
+		/* texture stuff */
+		if(face->flags & G3D_FLAG_FAC_TEXMAP) {
+			if(prev_texid != face->tex_image->tex_id) {
+				prev_texid = face->tex_image->tex_id;
+				if(req_end) {
+					glEnd();
+					req_end = FALSE;
+				}
+				glBindTexture(GL_TEXTURE_2D, prev_texid);
+				prev_vcnt = -1;
+			}
+		}
+
 		/* update polygon type */
 		if(face->vertex_count != prev_vcnt) {
 			if(req_end) {
@@ -172,11 +199,17 @@ gboolean gl_draw_object(G3DObject *object)
 		/* vertices for one face */
 		if(face->vertex_count >= 3) {
 			for(i = 0; i < face->vertex_count; i ++) {
+				if(face->flags & G3D_FLAG_FAC_TEXMAP)
+					glTexCoord2f(
+						face->tex_vertex_data[i * 2 + 0],
+						face->tex_vertex_data[i * 2 + 1]);
+
 				if(face->normals)
 					glNormal3f(
 						face->normals[i * 3 + 0],
 						face->normals[i * 3 + 1],
 						face->normals[i * 3 + 2]);
+
 				index = face->vertex_indices[i];
 				glVertex3f(
 					object->vertex_data[index * 3 + 0],

@@ -12,7 +12,7 @@ typedef struct _HBPart HBPart;
 
 typedef gboolean (*HBPartTypeRender2DFunc)(HBPart *part,
 	cairo_t *cairo, LayerID layerid);
-typedef gboolean (*HBPartTypeRender3DFunc)(HBPart *part, G3DModel *model);
+typedef gboolean (*HBPartTypeRender3DFunc)(HBPart *part, G3DContext *context);
 typedef gboolean (*HBPartTypeSelectFunc)(HBPart *part, gdouble x, gdouble y);
 typedef GtkWidget (*HBPartTypePropertiesFunc)(HBPart *part, GtkWidget **wp);
 

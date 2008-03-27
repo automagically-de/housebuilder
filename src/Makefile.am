@@ -9,6 +9,7 @@ housebuilder_SOURCES = \
 	tools.h \
 	view3d.c view3d.h \
 	gl.c gl.h \
+	texture.c texture.h \
 	trackball.c trackball.h \
 	house.c house.h \
 	node.c node.h \

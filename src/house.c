@@ -153,7 +153,7 @@ gboolean house_render_part_3d(HBHouse *house, HBPart *part)
 	/* render part */
 	if(part->type->render3d) {
 		/* render 3d stuff */
-		retval = part->type->render3d(part, house->model);
+		retval = part->type->render3d(part, house->model->context);
 		/* add part to model */
 		if(part->object != NULL) {
 			house->model->objects = g_slist_append(house->model->objects,
