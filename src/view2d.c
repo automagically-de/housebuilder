@@ -17,6 +17,8 @@ typedef struct {
 	GtkWidget *ruler_h;
 	GtkWidget *ruler_v;
 	HBToolID selected_tool;
+	HBPart *selected_part;
+	gint32 selected_floor;
 } View2DPrivate;
 
 static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
@@ -29,6 +31,9 @@ static gboolean scroll_cb(GtkWidget *widget, GdkEventScroll *event,
 	gpointer data);
 static gboolean motion_notify_cb(GtkWidget *widget, GdkEventMotion *event,
 	gpointer data);
+static gboolean configure_cb(GtkWidget *widget, GdkEventConfigure *event,
+	gpointer data);
+static gboolean view2d_scroll_da_cb(GtkAdjustment *adj, HBView *view);
 
 HBView *view2d_new(void)
 {
@@ -70,6 +75,16 @@ HBView *view2d_new(void)
 		G_CALLBACK(button_release_cb), view);
 	g_signal_connect(G_OBJECT(priv->da), "motion-notify-event",
 		G_CALLBACK(motion_notify_cb), view);
+	g_signal_connect(G_OBJECT(priv->da), "configure-event",
+		G_CALLBACK(configure_cb), view);
+	g_signal_connect(
+		G_OBJECT(gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(sw))),
+		"value-changed",
+		G_CALLBACK(view2d_scroll_da_cb), view);
+	g_signal_connect(
+		G_OBJECT(gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(sw))),
+		"value-changed",
+		G_CALLBACK(view2d_scroll_da_cb), view);
 
 	/* rulers */
 	priv->ruler_h = gtk_hruler_new();
@@ -101,17 +116,53 @@ static void rulers_update(HBView *view)
 {
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
 	gint32 x, y;
+	gdouble ox, oy;
 	GdkModifierType state;
 
 	gdk_window_get_pointer(priv->da->window, &x, &y, &state);
 
+	ox = gtk_adjustment_get_value(gtk_layout_get_hadjustment(
+		GTK_LAYOUT(priv->da))) / priv->scale;
+	oy = gtk_adjustment_get_value(gtk_layout_get_vadjustment(
+		GTK_LAYOUT(priv->da))) / priv->scale;
+
 	gtk_ruler_set_range(GTK_RULER(priv->ruler_h),
-		0, priv->da->allocation.width / priv->scale, x / priv->scale,
-		priv->da->allocation.width / priv->scale);
+		ox, ox + priv->da->allocation.width / priv->scale,
+		ox + x / priv->scale,
+		ox + priv->da->allocation.width / priv->scale);
 
 	gtk_ruler_set_range(GTK_RULER(priv->ruler_v),
-		0, priv->da->allocation.height / priv->scale, y / priv->scale,
-		priv->da->allocation.height / priv->scale);
+		oy, oy + priv->da->allocation.height / priv->scale,
+		oy + y / priv->scale,
+		oy + priv->da->allocation.height / priv->scale);
+}
+
+static void set_layout_size(HBView *view)
+{
+	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+	gdouble wx, wy, mx = 0.0, my = 0.0;
+
+	/* size of visible area */
+	wx = priv->da->allocation.width;
+	wy = priv->da->allocation.height;
+
+	/* maximum extension of parts */
+	house_get_max_extension(gui_get_house(view->gui),
+		priv->selected_floor, &mx, &my);
+	if(priv->selected_floor > 0)
+		house_get_max_extension(gui_get_house(view->gui),
+			priv->selected_floor - 1, &mx, &my);
+
+	mx = mx * priv->scale + 10;
+	my = my * priv->scale + 10;
+
+#if DEBUG > 2
+	g_debug("set_layout_size: window: %.2f, %.2f; house: %.2f, %.2f",
+		wx, wy, mx, my);
+#endif
+
+	gtk_layout_set_size(GTK_LAYOUT(priv->da),
+		(gint32)MAX(wx, mx), (gint32)MAX(wy, my));
 }
 
 /* drawing area callbacks ****************************************************/
@@ -125,6 +176,7 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	GSList *item;
 	cairo_t *cairo;
 	gint32 x, y;
+	gdouble ox, oy, wx, wy;
 
 	cairo = gdk_cairo_create(GTK_LAYOUT(widget)->bin_window);
 	cairo_scale(cairo, priv->scale, priv->scale);
@@ -136,22 +188,29 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	/* grid */
 	cairo_set_source_rgba(cairo, 0.3, 0.3, 0.3, 1.0);
 
-	for(y = 0; y <= priv->da->allocation.height / priv->scale; y += 10) {
-		if((y % 100) == 0)
+	ox = gtk_adjustment_get_value(gtk_layout_get_hadjustment(
+		GTK_LAYOUT(priv->da))) / priv->scale;
+	oy = gtk_adjustment_get_value(gtk_layout_get_vadjustment(
+		GTK_LAYOUT(priv->da))) / priv->scale;
+	wx = priv->da->allocation.width / priv->scale;
+	wy = priv->da->allocation.height / priv->scale;
+
+	for(y = oy / 10; y <= (oy + wy) / 10; y ++) {
+		if((y % 10) == 0)
 			cairo_set_line_width(cairo, 1.0);
 		else
 			cairo_set_line_width(cairo, 0.4);
-		cairo_move_to(cairo, 0, y);
-		cairo_line_to(cairo, priv->da->allocation.width / priv->scale, y);
+		cairo_move_to(cairo, ox, y * 10);
+		cairo_line_to(cairo, (ox + wx), y * 10);
 		cairo_stroke(cairo);
 	}
-	for(x = 0; x <= priv->da->allocation.width / priv->scale; x += 10) {
-		if((x % 100) == 0)
+	for(x = ox / 10; x <= (ox + wx) / 10; x ++) {
+		if((x % 10) == 0)
 			cairo_set_line_width(cairo, 1.0);
 		else
 			cairo_set_line_width(cairo, 0.4);
-		cairo_move_to(cairo, x, 0);
-		cairo_line_to(cairo, x, priv->da->allocation.height / priv->scale);
+		cairo_move_to(cairo, x * 10, oy);
+		cairo_line_to(cairo, x * 10, (oy + wy));
 		cairo_stroke(cairo);
 	}
 
@@ -218,6 +277,8 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 			house_update_position_hints(house);
 			house->dirty = TRUE; /* rebuild GL list */
 		}
+
+		set_layout_size(view);
 	}
 
 	if(priv->preview) {
@@ -250,6 +311,7 @@ static gboolean scroll_cb(GtkWidget *widget, GdkEventScroll *event,
 			break;
 	}
 
+	set_layout_size(view);
 	rulers_update(view);
 	view2d_redraw(view);
 
@@ -273,6 +335,24 @@ static gboolean motion_notify_cb(GtkWidget *widget, GdkEventMotion *event,
 
 	rulers_update(view);
 
+	return TRUE;
+}
+
+static gboolean configure_cb(GtkWidget *widget, GdkEventConfigure *event,
+	gpointer data)
+{
+	set_layout_size((HBView *)data);
+	rulers_update((HBView *)data);
+	return TRUE;
+}
+
+static gboolean view2d_scroll_da_cb(GtkAdjustment *adj, HBView *view)
+{
+#if DEBUG > 2
+	g_debug("view2d_scroll_da_cb called");
+#endif
+	rulers_update(view);
+	view2d_redraw(view);
 	return TRUE;
 }
 

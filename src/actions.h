@@ -36,9 +36,9 @@ static guint32 action_view2d_num_entries = G_N_ELEMENTS(action_view2d_entries);
 static GtkRadioActionEntry action_radio_entries[] =
 {
 	{ "ToolSelectAction", GTK_STOCK_INDEX, "_Select", NULL,
-		"tools_select", TOOL_SELECT },
+		"select a part", TOOL_SELECT },
 	{ "ToolDeleteAction", GTK_STOCK_DELETE, "_Delete", NULL,
-		"tools_delete", TOOL_DELETE },
+		"delete a part", TOOL_DELETE },
 	{ "ToolAddWallAction", GTK_STOCK_HOME, "Add _Wall", NULL,
 		"add wall", TOOL_ADD_WALL }
 };

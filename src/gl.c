@@ -82,9 +82,9 @@ void gl_init(void)
 gboolean gl_update_material(G3DMaterial *material)
 {
 	g_return_val_if_fail(material != NULL, FALSE);
-
+#if DEBUG > 1
 	g_debug("material updated");
-
+#endif
 	glColor4f(material->r, material->g, material->b, material->a);
 #if 1
 	glMaterialfv(GL_FRONT, GL_SPECULAR, material->specular);
@@ -105,8 +105,9 @@ gboolean gl_draw_object(G3DObject *object)
 #endif
 	G3DMaterial *prev_mat = NULL;
 
+#if DEBUG > 1
 	g_debug("gl_draw_object called");
-
+#endif
 	for(iface = object->faces; iface != NULL; iface = iface->next) {
 		face = (G3DFace *)iface->data;
 
@@ -217,7 +218,25 @@ gboolean gl_rebuild_list(HBHouse *house)
 	house->dlist = glGenLists(1);
 
 	glNewList(house->dlist, GL_COMPILE);
+#if 0
+#define SMOOTH_OUTLINE 1
+#endif
+#ifdef SMOOTH_OUTLINE
+	glEnable(GL_POLYGON_OFFSET_FILL);
+	glPolygonOffset(1.0, 1.0);
+#endif
 	gl_draw_objects(house->model->objects);
+#ifdef SMOOTH_OUTLINE
+	glDisable(GL_POLYGON_OFFSET_FILL);
+	glEnable(GL_BLEND);
+	glEnable(GL_LINE_SMOOTH);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	gl_draw_objects(house->model->objects);
+	glPolygonMode(GL_FRONT, GL_FILL);
+	glDisable(GL_BLEND);
+	glDisable(GL_LINE_SMOOTH);
+#endif
 	glEndList();
 	return TRUE;
 }

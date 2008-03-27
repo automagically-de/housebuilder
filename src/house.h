@@ -49,5 +49,7 @@ typedef struct {
 } HBHouse;
 
 gboolean house_update_position_hints(HBHouse *house);
+gboolean house_get_max_extension(HBHouse *house, gint32 floor, gdouble *mx,
+	gdouble *my);
 
 #endif /* _HOUSE_H */

@@ -1,4 +1,5 @@
 #include "house.h"
+#include "node.h"
 
 static gdouble objects_max_radius(GSList *objects);
 static void objects_max_extension(GSList *objects,
@@ -48,9 +49,10 @@ gboolean house_update_position_hints(HBHouse *house)
 	/* get scale factor */
 	house->scale = 10.0 / objects_max_radius(house->model->objects);
 
+#if DEBUG > 2
 	g_debug("position hints: (%.2f, %.2f, %.2f), %.2f",
 		house->off_x, house->off_y, house->off_z, house->scale);
-
+#endif
 	return TRUE;
 }
 
@@ -116,3 +118,25 @@ static void objects_max_extension(GSList *objects,
 	}
 }
 
+gboolean house_get_max_extension(HBHouse *house, gint32 floor, gdouble *mx,
+	gdouble *my)
+{
+	GSList *pitem;
+	HBPart *part;
+	gint32 i, n;
+	gdouble x, y;
+
+	/* FIXME: floor handling */
+	for(pitem = house->parts; pitem != NULL; pitem = pitem->next) {
+		part = (HBPart *)pitem->data;
+		n = g_slist_length(part->nodes);
+		for(i = 0; i < n; i ++) {
+			node_get_xy(part, i, &x, &y);
+			if(x > *mx)
+				*mx = x;
+			if(y > *my)
+				*my = y;
+		}
+	}
+	return TRUE;
+}
