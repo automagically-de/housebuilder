@@ -104,12 +104,6 @@ gboolean part_wall_render3d(HBPart *part, G3DModel *model)
 		mat->a = 1.0;
 	}
 
-	/* remove old object */
-	if(part->object) {
-		model->objects = g_slist_remove(model->objects, part->object);
-		g3d_object_free(part->object);
-	}
-
 	part->object = g3d_primitive_box(delta, 20.0, wall->thickness, mat);
 
 	g3d_matrix_identity(matrix);
@@ -120,8 +114,6 @@ gboolean part_wall_render3d(HBPart *part, G3DModel *model)
 	g3d_matrix_identity(matrix);
 	g3d_matrix_translate(cx, 10.0, cy, matrix);
 	g3d_object_transform(part->object, matrix);
-
-	model->objects = g_slist_append(model->objects, part->object);
 
 	return TRUE;
 }

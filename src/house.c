@@ -29,7 +29,7 @@ void part_free(HBPart *part)
 	g_free(part);
 }
 
-#define THRESHOLD 1.0
+#define THRESHOLD 2.0
 
 gboolean part_select_line(HBPart *part, gdouble x, gdouble y)
 {
@@ -60,10 +60,27 @@ gboolean part_select_line(HBPart *part, gdouble x, gdouble y)
 		((MIN(ay, by) - THRESHOLD) > y) || (y > (MAX(ay, by) + THRESHOLD)))
 		return FALSE;
 
-	if(misc_delta_p(ax, bx, ay, by, x, y) > THRESHOLD)
+	if(misc_delta_p(ax, ay, bx, by, x, y) > THRESHOLD)
 		return FALSE;
 
 	return TRUE;
+}
+
+gint32 part_select_node(HBPart *part, gdouble x, gdouble y)
+{
+	gint32 i, n;
+	gdouble nx, ny;
+
+	if(part == NULL)
+		return -1;
+
+	n = g_slist_length(part->nodes);
+	for(i = 0; i < n; i ++) {
+		node_get_xy(part, i, &nx, &ny);
+		if(misc_delta(nx, ny, x, y) < 5.0)
+			return i;
+	}
+	return -1;
 }
 
 /* HBHouse stuff *************************************************************/
@@ -118,6 +135,36 @@ HBPart *house_select_part(HBHouse *house, gint32 floor, gdouble x, gdouble y)
 	return NULL;
 }
 
+gboolean house_render_part_3d(HBHouse *house, HBPart *part)
+{
+	gboolean retval = FALSE;
+
+	if((house == NULL) || (part == NULL))
+		return FALSE;
+
+	/* remove old object */
+	if(part->object) {
+		house->model->objects = g_slist_remove(house->model->objects,
+			part->object);
+		g3d_object_free(part->object);
+		part->object = NULL;
+	}
+
+	/* render part */
+	if(part->type->render3d) {
+		/* render 3d stuff */
+		retval = part->type->render3d(part, house->model);
+		/* add part to model */
+		if(part->object != NULL) {
+			house->model->objects = g_slist_append(house->model->objects,
+				part->object);
+		}
+		/* inform the renderer */
+		house_update_position_hints(house);
+		house->dirty = TRUE; /* rebuild GL list */
+	}
+	return retval;
+}
 
 /* helper functions **********************************************************/
 
