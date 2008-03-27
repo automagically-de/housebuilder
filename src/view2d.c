@@ -225,6 +225,16 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 		}
 	}
 
+	/* selection */
+	if(priv->selected_part) {
+		if(priv->selected_part->type->render2d) {
+			cairo_save(cairo);
+			priv->selected_part->type->render2d(priv->selected_part,
+				cairo, LAYER_SELECT);
+			cairo_restore(cairo);
+		}
+	}
+
 	/* preview */
 	if(priv->preview && priv->preview->type->render2d)
 		priv->preview->type->render2d(priv->preview, cairo, LAYER_PREVIEW);
@@ -263,13 +273,23 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 
 	house = gui_get_house(view->gui);
 
-	/* FIXME: tool selection */
-	if(priv->selected_tool == TOOL_ADD_WALL) {
+	switch(priv->selected_tool) {
+		case TOOL_SELECT:
+			priv->selected_part = house_select_part(house,
+				priv->selected_floor,
+				(event->x / priv->scale), (event->y / priv->scale));
+			break;
+		case TOOL_DELETE:
+			priv->selected_part = house_select_part(house,
+				priv->selected_floor,
+				(event->x / priv->scale), (event->y / priv->scale));
+			break;
+		default:
+		/* FIXME: */
 		part = part_wall_new();
 		node_set_xy(part, 0, priv->drag_x, priv->drag_y);
 		node_set_xy(part, 1,
-			(event->x / priv->scale),
-			(event->y / priv->scale));
+			(event->x / priv->scale), (event->y / priv->scale));
 		house->parts = g_slist_append(house->parts, part);
 
 		if(part->type->render3d) {
@@ -279,7 +299,8 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 		}
 
 		set_layout_size(view);
-	}
+		break;
+	} /* priv->selected_tool? */
 
 	if(priv->preview) {
 		part_free(priv->preview);

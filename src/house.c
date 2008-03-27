@@ -1,10 +1,13 @@
 #include "house.h"
 #include "node.h"
+#include "misc.h"
 
 static gdouble objects_max_radius(GSList *objects);
 static void objects_max_extension(GSList *objects,
 	gdouble *min_x, gdouble *min_y, gdouble *min_z,
 	gdouble *max_x,	gdouble *max_y, gdouble *max_z);
+
+/* HBPart stuff **************************************************************/
 
 HBPart *part_new(HBPartType *type, gpointer data)
 {
@@ -25,6 +28,45 @@ void part_free(HBPart *part)
 
 	g_free(part);
 }
+
+#define THRESHOLD 1.0
+
+gboolean part_select_line(HBPart *part, gdouble x, gdouble y)
+{
+	gdouble x1, y1, x2, y2, ax, ay, bx, by;
+
+	if(g_slist_length(part->nodes) < 2)
+		return FALSE;
+
+	node_get_xy(part, 0, &x1, &y1);
+	node_get_xy(part, 1, &x2, &y2);
+
+	if(x1 < x2) {
+		ax = x1;
+		ay = y1;
+		bx = x2;
+		by = y2;
+	} else {
+		ax = x2;
+		ay = y2;
+		bx = x1;
+		by = y1;
+	}
+
+	g_debug("select line: (%.2f, %.2f), (%.2f, %.2f), (%.2f, %.2f)",
+		ax, ay, bx, by, x, y);
+
+	if(((ax - THRESHOLD) > x) || (x > (bx + THRESHOLD)) ||
+		((MIN(ay, by) - THRESHOLD) > y) || (y > (MAX(ay, by) + THRESHOLD)))
+		return FALSE;
+
+	if(misc_delta_p(ax, bx, ay, by, x, y) > THRESHOLD)
+		return FALSE;
+
+	return TRUE;
+}
+
+/* HBHouse stuff *************************************************************/
 
 gboolean house_update_position_hints(HBHouse *house)
 {
@@ -55,6 +97,27 @@ gboolean house_update_position_hints(HBHouse *house)
 #endif
 	return TRUE;
 }
+
+HBPart *house_select_part(HBHouse *house, gint32 floor, gdouble x, gdouble y)
+{
+	HBPart *part;
+	GSList *pitem;
+
+	/* FIXME: floor handling */
+	for(pitem = house->parts; pitem != NULL; pitem = pitem->next) {
+		part = (HBPart *)pitem->data;
+		if(part->type->select) {
+			if(part->type->select(part, x, y))
+				return part;
+		} else {
+			/* fallback to line selection if unset */
+			if(part_select_line(part, x, y))
+				return part;
+		}
+	}
+	return NULL;
+}
+
 
 /* helper functions **********************************************************/
 

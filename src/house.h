@@ -36,6 +36,7 @@ struct _HBPart {
 
 HBPart *part_new(HBPartType *type, gpointer data);
 void part_free(HBPart *part);
+gboolean part_select_line(HBPart *part, gdouble x, gdouble y);
 
 typedef struct {
 	gboolean dirty;
@@ -51,5 +52,6 @@ typedef struct {
 gboolean house_update_position_hints(HBHouse *house);
 gboolean house_get_max_extension(HBHouse *house, gint32 floor, gdouble *mx,
 	gdouble *my);
+HBPart *house_select_part(HBHouse *house, gint32 floor, gdouble x, gdouble y);
 
 #endif /* _HOUSE_H */

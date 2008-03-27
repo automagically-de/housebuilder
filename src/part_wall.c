@@ -48,7 +48,6 @@ gboolean part_wall_render2d(HBPart *part, cairo_t *cairo, LayerID layerid)
 	angle = node_get_angle(part);
 	delta = node_get_delta(part);
 
-	/* FIXME: scale + offset */
 	cairo_translate(cairo, cx, cy);
 	cairo_rotate(cairo, angle);
 
@@ -66,6 +65,14 @@ gboolean part_wall_render2d(HBPart *part, cairo_t *cairo, LayerID layerid)
 		case LAYER_PREVIEW:
 			cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 0.7);
 			cairo_set_line_width(cairo, 1.0);
+			cairo_rectangle(cairo,
+				- delta / 2.0, - wall->thickness / 2.0,
+				delta, wall->thickness);
+			cairo_stroke(cairo);
+			break;
+		case LAYER_SELECT:
+			cairo_set_source_rgba(cairo, 1.0, 0.2, 0.2, 0.7);
+			cairo_set_line_width(cairo, 1.5);
 			cairo_rectangle(cairo,
 				- delta / 2.0, - wall->thickness / 2.0,
 				delta, wall->thickness);
