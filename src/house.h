@@ -8,6 +8,10 @@
 #include "layers.h"
 #include "texture.h"
 
+typedef struct _HBHouse HBHouse;
+
+/* HBPart stuff **************************************************************/
+
 typedef struct _HBPartType HBPartType;
 typedef struct _HBPart HBPart;
 
@@ -41,21 +45,36 @@ void part_free(HBPart *part);
 gboolean part_select_line(HBPart *part, gdouble x, gdouble y);
 gint32 part_select_node(HBPart *part, gdouble x, gdouble y);
 
+/* HBFloor stuff *************************************************************/
+
 typedef struct {
-	gboolean dirty;
+	gint32 n;
+	gdouble height;
+	GSList *properties;
 	GSList *parts;
+	GSList *object;
+} HBFloor;
+
+HBFloor *floor_new(HBHouse *house);
+
+/* HBHouse stuff *************************************************************/
+
+struct _HBHouse {
+	gboolean dirty;
+	GSList *floors;
 	G3DModel *model;
 	gint32 dlist;
 	gdouble off_x;
 	gdouble off_y;
 	gdouble off_z;
 	gdouble scale;
-} HBHouse;
+};
 
 gboolean house_update_position_hints(HBHouse *house);
-gboolean house_get_max_extension(HBHouse *house, gint32 floor, gdouble *mx,
+gboolean house_get_max_extension(HBHouse *house, gint32 n_floor, gdouble *mx,
 	gdouble *my);
-HBPart *house_select_part(HBHouse *house, gint32 floor, gdouble x, gdouble y);
+HBPart *house_select_part(HBHouse *house, gint32 n_floor, gdouble x,
+	gdouble y);
 gboolean house_render_part_3d(HBHouse *house, HBPart *part,
 	HBTextureLoader *loader);
 

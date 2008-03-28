@@ -219,13 +219,15 @@ gboolean gl_draw_object(G3DObject *object)
 	return TRUE;
 }
 
-gboolean gl_draw_objects(GSList *objects)
+static gboolean gl_draw_parts(GSList *parts)
 {
 	GSList *item;
+	HBPart *part;
 
-	for(item = objects; item != NULL; item = item->next) {
+	for(item = parts; item != NULL; item = item->next) {
+		part = (HBPart *)item->data;
 		glPushMatrix();
-		gl_draw_object((G3DObject *)item->data);
+		gl_draw_object(part->object);
 		glPopMatrix();
 	}
 	return TRUE;
@@ -233,30 +235,19 @@ gboolean gl_draw_objects(GSList *objects)
 
 gboolean gl_rebuild_list(HBHouse *house)
 {
+	GSList *fitem;
+	HBFloor *floor;
+
 	if(house->dlist >= 0)
 		glDeleteLists(house->dlist, 1);
 	house->dlist = glGenLists(1);
 
 	glNewList(house->dlist, GL_COMPILE);
-#if 0
-#define SMOOTH_OUTLINE 1
-#endif
-#ifdef SMOOTH_OUTLINE
-	glEnable(GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset(1.0, 1.0);
-#endif
-	gl_draw_objects(house->model->objects);
-#ifdef SMOOTH_OUTLINE
-	glDisable(GL_POLYGON_OFFSET_FILL);
-	glEnable(GL_BLEND);
-	glEnable(GL_LINE_SMOOTH);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	gl_draw_objects(house->model->objects);
-	glPolygonMode(GL_FRONT, GL_FILL);
-	glDisable(GL_BLEND);
-	glDisable(GL_LINE_SMOOTH);
-#endif
+	for(fitem = house->floors; fitem != NULL; fitem = fitem->next) {
+		floor = (HBFloor *)fitem->data;
+		gl_draw_parts(floor->parts);
+		glTranslated(0.0, floor->height, 0.0);
+	}
 	glEndList();
 	return TRUE;
 }

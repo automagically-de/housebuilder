@@ -133,6 +133,9 @@ HBHouse *gui_get_house(HBGui *gui)
 		gui->house->model = g_new0(G3DModel, 1);
 		gui->house->model->filename = g_strdup("house");
 		gui->house->model->context = gui->context;
+
+		/* basement */
+		floor_new(gui->house);
 	}
 	return gui->house;
 }

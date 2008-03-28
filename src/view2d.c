@@ -174,6 +174,7 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	gpointer data)
 {
 	HBView *view = (HBView *)data;
+	HBFloor *floor;
 	HBPart *part;
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
 	GSList *item;
@@ -218,7 +219,9 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 	}
 
 	/* parts */
-	for(item = gui_get_house(view->gui)->parts; item; item = item->next) {
+	floor = g_slist_nth_data(gui_get_house(view->gui)->floors,
+		priv->selected_floor);
+	for(item = floor->parts; item; item = item->next) {
 		part = (HBPart *)item->data;
 
 		if(part->type->render2d) {
@@ -283,6 +286,7 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 {
 	HBView *view = (HBView *)data;
 	HBHouse *house;
+	HBFloor *floor;
 	HBPart *part;
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
 	gdouble x, y;
@@ -310,11 +314,12 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 				priv->selected_floor, x, y);
 			break;
 		default:
+			floor = g_slist_nth_data(house->floors, priv->selected_floor);
 		/* FIXME: */
 		part = part_wall_new();
 		node_set_xy(part, 0, priv->drag_x, priv->drag_y);
 		node_set_xy(part, 1, x, y);
-		house->parts = g_slist_append(house->parts, part);
+		floor->parts = g_slist_append(floor->parts, part);
 
 		house_render_part_3d(house, part,
 			gui_get_texture_loader(view->gui));
@@ -406,11 +411,28 @@ static gboolean view2d_scroll_da_cb(GtkAdjustment *adj, HBView *view)
 void view2d_upper_floor_cb(GtkWidget *widget, HBView *view)
 {
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+	HBHouse *house = gui_get_house(view->gui);
+
+	priv->selected_floor ++;
+	if(g_slist_nth_data(house->floors, priv->selected_floor) == NULL)
+		floor_new(house);
+	priv->selected_part = NULL;
+	priv->selected_node = -1;
+	set_layout_size(view);
+	view2d_redraw(view);
 }
 
 void view2d_lower_floor_cb(GtkWidget *widget, HBView *view)
 {
 	View2DPrivate *priv = (View2DPrivate *)view->user_data;
+
+	priv->selected_floor --;
+	if(priv->selected_floor < 0)
+		priv->selected_floor = 0;
+	priv->selected_part = NULL;
+	priv->selected_node = -1;
+	set_layout_size(view);
+	view2d_redraw(view);
 }
 
 void view2d_select_tool_cb(GtkAction *action, GtkRadioAction *current,

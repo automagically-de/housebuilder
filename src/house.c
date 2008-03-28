@@ -1,5 +1,6 @@
 #include "house.h"
 #include "node.h"
+#include "property.h"
 #include "misc.h"
 
 static gdouble objects_max_radius(GSList *objects);
@@ -83,6 +84,25 @@ gint32 part_select_node(HBPart *part, gdouble x, gdouble y)
 	return -1;
 }
 
+/* HBFloor stuff *************************************************************/
+
+HBFloor *floor_new(HBHouse *house)
+{
+	HBFloor *floor;
+	PropertyPrivate *ppriv;
+
+	floor = g_new0(HBFloor, 1);
+	floor->n = g_slist_length(house->floors);
+	house->floors = g_slist_append(house->floors, floor);
+
+	/* properties */
+	floor->height = 29.0;
+	ppriv = property_new_double(2.90, 0.1, 10.0, 0.1);
+	property_add(floor->properties, "height", ppriv, &(floor->height));
+
+	return floor;
+}
+
 /* HBHouse stuff *************************************************************/
 
 gboolean house_update_position_hints(HBHouse *house)
@@ -115,13 +135,18 @@ gboolean house_update_position_hints(HBHouse *house)
 	return TRUE;
 }
 
-HBPart *house_select_part(HBHouse *house, gint32 floor, gdouble x, gdouble y)
+HBPart *house_select_part(HBHouse *house, gint32 n_floor, gdouble x, gdouble y)
 {
+	HBFloor *floor;
 	HBPart *part;
 	GSList *pitem;
 
+	floor = g_slist_nth_data(house->floors, n_floor);
+	if(floor == NULL)
+		return NULL;
+
 	/* FIXME: floor handling */
-	for(pitem = house->parts; pitem != NULL; pitem = pitem->next) {
+	for(pitem = floor->parts; pitem != NULL; pitem = pitem->next) {
 		part = (HBPart *)pitem->data;
 		if(part->type->select) {
 			if(part->type->select(part, x, y))
@@ -229,16 +254,20 @@ static void objects_max_extension(GSList *objects,
 	}
 }
 
-gboolean house_get_max_extension(HBHouse *house, gint32 floor, gdouble *mx,
+gboolean house_get_max_extension(HBHouse *house, gint32 n_floor, gdouble *mx,
 	gdouble *my)
 {
 	GSList *pitem;
+	HBFloor *floor;
 	HBPart *part;
 	gint32 i, n;
 	gdouble x, y;
 
-	/* FIXME: floor handling */
-	for(pitem = house->parts; pitem != NULL; pitem = pitem->next) {
+	floor = g_slist_nth_data(house->floors, n_floor);
+	if(floor == NULL)
+		return FALSE;
+
+	for(pitem = floor->parts; pitem != NULL; pitem = pitem->next) {
 		part = (HBPart *)pitem->data;
 		n = g_slist_length(part->nodes);
 		for(i = 0; i < n; i ++) {
