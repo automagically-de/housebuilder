@@ -6,13 +6,15 @@
 #include <gtk/gtk.h>
 
 #include "layers.h"
+#include "texture.h"
 
 typedef struct _HBPartType HBPartType;
 typedef struct _HBPart HBPart;
 
 typedef gboolean (*HBPartTypeRender2DFunc)(HBPart *part,
 	cairo_t *cairo, LayerID layerid);
-typedef gboolean (*HBPartTypeRender3DFunc)(HBPart *part, G3DContext *context);
+typedef gboolean (*HBPartTypeRender3DFunc)(HBPart *part, G3DContext *context,
+	HBTextureLoader *loader);
 typedef gboolean (*HBPartTypeSelectFunc)(HBPart *part, gdouble x, gdouble y);
 typedef GtkWidget (*HBPartTypePropertiesFunc)(HBPart *part, GtkWidget **wp);
 
@@ -54,6 +56,7 @@ gboolean house_update_position_hints(HBHouse *house);
 gboolean house_get_max_extension(HBHouse *house, gint32 floor, gdouble *mx,
 	gdouble *my);
 HBPart *house_select_part(HBHouse *house, gint32 floor, gdouble x, gdouble y);
-gboolean house_render_part_3d(HBHouse *house, HBPart *part);
+gboolean house_render_part_3d(HBHouse *house, HBPart *part,
+	HBTextureLoader *loader);
 
 #endif /* _HOUSE_H */

@@ -153,7 +153,8 @@ gboolean view3d_expose_cb(GtkWidget *widget, GdkEventExpose *event,
 
 	house = gui_get_house(view->gui);
 	gl_draw(house, priv->zoom, priv->aspect, priv->quat,
-		priv->offx, priv->offy);
+		priv->offx, priv->offy,
+		gui_get_texture_loader(view->gui));
 
 	gdk_gl_drawable_swap_buffers(gldrawable);
 	gdk_gl_drawable_gl_end(gldrawable);

@@ -14,6 +14,7 @@
 struct _HBGui {
 	GtkWidget *window;
 	HBHouse *house;
+	HBTextureLoader *texture_loader;
 
 	HBView *view2d;
 	HBView *view3d;
@@ -36,6 +37,9 @@ HBGui *gui_init(int *argcp, char ***argvp)
 
 	/* g3d initialization */
 	gui->context = g3d_context_new();
+
+	/* texture loader init */
+	gui->texture_loader = texture_loader_new(gui->context);
 
 	/* create main window */
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -131,6 +135,11 @@ HBHouse *gui_get_house(HBGui *gui)
 		gui->house->model->context = gui->context;
 	}
 	return gui->house;
+}
+
+HBTextureLoader *gui_get_texture_loader(HBGui *gui)
+{
+	return gui->texture_loader;
 }
 
 G3DContext *gui_get_g3d_context(HBGui *gui)

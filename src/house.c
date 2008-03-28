@@ -135,7 +135,8 @@ HBPart *house_select_part(HBHouse *house, gint32 floor, gdouble x, gdouble y)
 	return NULL;
 }
 
-gboolean house_render_part_3d(HBHouse *house, HBPart *part)
+gboolean house_render_part_3d(HBHouse *house, HBPart *part,
+	HBTextureLoader *loader)
 {
 	gboolean retval = FALSE;
 
@@ -153,7 +154,7 @@ gboolean house_render_part_3d(HBHouse *house, HBPart *part)
 	/* render part */
 	if(part->type->render3d) {
 		/* render 3d stuff */
-		retval = part->type->render3d(part, house->model->context);
+		retval = part->type->render3d(part, house->model->context, loader);
 		/* add part to model */
 		if(part->object != NULL) {
 			house->model->objects = g_slist_append(house->model->objects,

@@ -106,19 +106,6 @@ gboolean gl_draw_object(G3DObject *object)
 #endif
 	G3DMaterial *prev_mat = NULL;
 
-	do {
-		static gboolean tex_loaded = FALSE;
-		GSList *mitem = object->materials;
-		G3DMaterial *mat;
-		if(!tex_loaded && mitem) {
-			mat = (G3DMaterial *)mitem->data;
-			if(mat->tex_image) {
-				texture_load(mat->tex_image);
-				tex_loaded = TRUE;
-			}
-		}
-	} while(0);
-
 #if DEBUG > 1
 	g_debug("gl_draw_object called");
 #endif
@@ -275,7 +262,7 @@ gboolean gl_rebuild_list(HBHouse *house)
 }
 
 gboolean gl_draw(HBHouse *house, gdouble zoom, gdouble aspect, gfloat *quat,
-	gdouble offx, gdouble offy)
+	gdouble offx, gdouble offy, HBTextureLoader *loader)
 {
 	GLenum error;
 	static gboolean initialized = FALSE;
@@ -348,6 +335,7 @@ gboolean gl_draw(HBHouse *house, gdouble zoom, gdouble aspect, gfloat *quat,
 		return FALSE;
 
 	if(house->dirty || (house->dlist == -1)) {
+		texture_loader_load_textures(loader);
 		gl_rebuild_list(house);
 		TRAP_GL_ERROR("gl_rebuild_list");
 		house->dirty = FALSE;

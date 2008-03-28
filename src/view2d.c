@@ -5,6 +5,7 @@
 #include "node.h"
 #include "view2d.h"
 #include "tools.h"
+#include "texture.h"
 
 #include "part_wall.h"
 
@@ -296,7 +297,8 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 			if(priv->selected_node >= 0) {
 				/* node moved */
 				node_set_xy(priv->selected_part, priv->selected_node, x, y);
-				house_render_part_3d(house, priv->selected_part);
+				house_render_part_3d(house, priv->selected_part,
+					gui_get_texture_loader(view->gui));
 			} else {
 				/* try to select part */
 				priv->selected_part = house_select_part(house,
@@ -314,7 +316,8 @@ static gboolean button_release_cb(GtkWidget *widget, GdkEventButton *event,
 		node_set_xy(part, 1, x, y);
 		house->parts = g_slist_append(house->parts, part);
 
-		house_render_part_3d(house, part);
+		house_render_part_3d(house, part,
+			gui_get_texture_loader(view->gui));
 
 		set_layout_size(view);
 		break;

@@ -12,7 +12,8 @@
 #include "property.h"
 
 gboolean part_wall_render2d(HBPart *part, cairo_t *cairo, LayerID layerid);
-gboolean part_wall_render3d(HBPart *part, G3DContext *context);
+gboolean part_wall_render3d(HBPart *part, G3DContext *context,
+	HBTextureLoader *loader);
 
 HBPartType part_wall = {
 	"wall",
@@ -24,6 +25,7 @@ HBPartType part_wall = {
 
 typedef struct {
 	gdouble thickness;
+	G3DMaterial *material;
 } PartWall;
 
 HBPart *part_wall_new(void)
@@ -89,7 +91,8 @@ gboolean part_wall_render2d(HBPart *part, cairo_t *cairo, LayerID layerid)
 	return TRUE;
 }
 
-gboolean part_wall_render3d(HBPart *part, G3DContext *context)
+gboolean part_wall_render3d(HBPart *part, G3DContext *context,
+	HBTextureLoader *loader)
 {
 	static G3DMaterial *mat = NULL;
 	PartWall *wall = (PartWall *)part->data;
@@ -109,14 +112,9 @@ gboolean part_wall_render3d(HBPart *part, G3DContext *context)
 		mat->g = 0.2;
 		mat->b = 0.0;
 		mat->a = 1.0;
-		mat->tex_image = g3d_texture_load(context,
+		mat->tex_image = texture_from_file(loader,
 			DATA_DIR "/textures/01bricks1.png");
-		if(mat->tex_image) {
-			mat->tex_image->tex_id = 1;
-#if 0
-			texture_load(mat->tex_image);
-#endif
-		}
+		wall->material = mat;
 	}
 
 	part->object = g3d_primitive_box(delta, 20.0, wall->thickness, mat);
