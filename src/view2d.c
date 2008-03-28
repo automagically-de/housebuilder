@@ -218,6 +218,20 @@ static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event,
 		cairo_stroke(cairo);
 	}
 
+	/* lower floor parts */
+	if(priv->selected_floor > 0) {
+		floor = g_slist_nth_data(gui_get_house(view->gui)->floors,
+			priv->selected_floor - 1);
+		for(item = floor->parts; item; item = item->next) {
+			part = (HBPart *)item->data;
+			if(part->type->render2d) {
+				cairo_save(cairo);
+				part->type->render2d(part, cairo, LAYER_PREV_FLOOR);
+				cairo_restore(cairo);
+			}
+		}
+	}
+
 	/* parts */
 	floor = g_slist_nth_data(gui_get_house(view->gui)->floors,
 		priv->selected_floor);

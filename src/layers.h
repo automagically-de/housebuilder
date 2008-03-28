@@ -4,6 +4,7 @@
 typedef enum {
 	LAYER_BASE,
 	NUM_LAYERS,
+	LAYER_PREV_FLOOR,
 	LAYER_SELECT,
 	LAYER_PREVIEW
 } LayerID;
